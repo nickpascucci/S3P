@@ -1,5 +1,3 @@
-#include <stdio.h>
-
 #include <s3p.h>
 
 enum S3P_CONTROL_CHARS {
