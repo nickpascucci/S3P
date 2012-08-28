@@ -1,0 +1,182 @@
+<!doctype html>
+<!-- The Time Machine GitHub pages theme was designed and developed by Jon Rohan, on Feb 7, 2012. -->
+<!-- Follow him for fun. http://twitter.com/jonrohan. Tail his code on http://github.com/jonrohan -->
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+  <link rel="stylesheet" href="stylesheets/stylesheet.css" media="screen"/>
+  <link rel="stylesheet" href="stylesheets/pygment_trac.css"/>
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+  <script type="text/javascript" src="javascripts/script.js"></script>
+
+  <title>S3p</title>
+  <meta name="description" content="A Super Simple Streaming Protocol for communicating simply.">
+
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+</head>
+
+<body>
+
+  <div class="wrapper">
+    <header>
+      <h1 class="title">S3p</h1>
+    </header>
+    <div id="container">
+      <p class="tagline">A Super Simple Streaming Protocol for communicating simply.</p>
+      <div id="main" role="main">
+        <div class="download-bar">
+        <div class="inner">
+          <a href="https://github.com/nickpascucci/S3P/tarball/master" class="download-button tar"><span>Download</span></a>
+          <a href="https://github.com/nickpascucci/S3P/zipball/master" class="download-button zip"><span>Download</span></a>
+          <a href="https://github.com/nickpascucci/S3P" class="code">View S3p on GitHub</a>
+        </div>
+        <span class="blc"></span><span class="trc"></span>
+        </div>
+        <article class="markdown-body">
+          <p><a href="http://travis-ci.org/nickpascucci/S3P"><img src="https://secure.travis-ci.org/nickpascucci/S3P.png" alt="Build Status"></a></p>
+
+<h2>libS3P and the Super Simple Streaming Protocol</h2>
+
+<p>S3P is an extremely minimal protocol for doing basic communications
+over streaming links such as TCP or UART Serial connections. It
+provides packetization and limited error detection functionality, but
+not much more. The benefit of such limited functionality is that the
+protocol is extremely easy to implement and to parse, and has low
+overhead making it suitable for embedded applications.</p>
+
+<h3>Technical Details</h3>
+
+<p>An S3P packet consists of a start marker, a length byte, a series of
+data bytes, and a checksum. In order to preserve the uniqueness of the
+start marker value, any conflicting values in the body of the packet
+are escaped.</p>
+
+<p>An example:</p>
+
+<pre><code>[0x56][0x03][0x01][0x02][0x03][0x06]
+^0    ^1    ^2    ^3    ^4    ^5
+
+0: Start byte
+1: Length byte
+2: Data 1
+3: Data 2
+4: Data 3
+5: Checksum
+</code></pre>
+
+<p>Escaping is performed by preceding the escaped value with 0x25, and
+XOR'ing it with 0x20. Only two values need to be escaped in this way:
+0x56 (Start) and 0x25 (Escape). In order to unescape, simply XOR the
+value with 0x20 again.</p>
+
+<p>Another example:</p>
+
+<pre><code>[0x56][0x02][0x01][0x25][0x26]
+</code></pre>
+
+<p>becomes</p>
+
+<pre><code>[0x56][0x02][0x01][0x25][0x05][0x26]
+^0    ^1    ^2    ^3    ^4    ^5
+
+0: Start byte
+1: Length byte
+2: Data 1
+3: Escape Byte
+4: Data 2
+5: Checksum
+</code></pre>
+
+<p>Because the length byte may take these values as well, it must be
+escaped. The length byte represents the number of data bytes in the
+packet <em>prior to escaping</em>. It does not take into account the start,
+length, or checksum bytes.</p>
+
+<p>The checksum is calculated by summing the values of the data bytes,
+but not the start or length bytes, and taking the value MOD 256.</p>
+
+<h3>API</h3>
+
+<p>libS3P provides a reference implementation, in C, of the S3P
+protocol. It provides two functions: s3p_build() and
+s3p_read(). Their signatures are as follows:</p>
+
+<pre><code>/**
+   Build a new packet from the bytes in "data" into "out".
+
+   S3P packets are limited to 256 bytes of data; attempting to
+   packetize more will result in a S3P_PAYLOAD_TOO_LARGE
+   error. "out" must be at least S3P_OVERHEAD bytes longer than
+   the data that needs to be packetized; and this can increase to
+   twofold depending on the number of bytes that need escaping. In
+   general, unless memory usage is a concern, allocate twice as
+   much space as the data you wish to packetize.
+
+   Params:
+   data: a byte array of data to be packetized.
+   dsize: the length of "data".
+   out: a byte array which will hold the built packet.
+   osize: the length of "out".
+   psize: a pointer to an int which will contain the length of the
+   built packet.
+*/
+S3P_ERR s3p_build(uint8_t const *data, size_t dsize, uint8_t *out, 
+                  size_t osize, size_t *psize);
+
+/**
+   Read a packet from "in", and place unescaped data into "data".
+
+   Breaking streams into packets is the responsibility of the
+   caller. This function will only read the first packet in the
+   "in" buffer; all other data will be ignored. This function
+   guarantees that the length of the data retrieved from the
+   packet will be strictly less than the size of the input packet.
+
+   Params:
+   in: byte array of raw, packetized data.
+   isize: the length of "in".
+   data: byte array which will contain the retrieved data.
+   dsize: the length of "data".
+   psize: pointer to an int which will contain the length of the
+   retrieved data.
+*/
+S3P_ERR s3p_read(uint8_t const *in, size_t isize, uint8_t *data, 
+                 size_t dsize, size_t *psize);
+</code></pre>
+
+<p><code>S3P_ERR</code> is an enum of error conditions, including:</p>
+
+<ul>
+<li>S3P_SUCCESS</li>
+<li>S3P_BUF_TOO_SMALL</li>
+<li>S3P_PAYLOAD_TOO_LARGE</li>
+<li>S3P_CHECKSUM_ERR</li>
+<li>S3P_PARSE_FAILURE</li>
+</ul><p>All of the code in this library is provided free of charge and WITHOUT
+WARRANTY under the LGPL license.</p>
+        </article>
+      </div>
+    </div>
+    <footer>
+      <div class="owner">
+      <p><a href="https://github.com/nickpascucci" class="avatar"><img src="https://secure.gravatar.com/avatar/acc4d5563d7b20ae267d54e201f787d4?s=30&amp;d=https://a248.e.akamai.net/assets.github.com%2Fimages%2Fgravatars%2Fgravatar-user-420.png" width="48" height="48"/></a> <a href="https://github.com/nickpascucci">nickpascucci</a> maintains <a href="https://github.com/nickpascucci/S3P">S3p</a></p>
+
+
+      </div>
+      <div class="creds">
+        <small>This page generated using <a href="https://pages.github.com/">GitHub Pages</a><br/>theme by <a href="http://twitter.com/jonrohan/">Jon Rohan</a></small>
+      </div>
+    </footer>
+  </div>
+  <div class="current-section">
+    <a href="#top">Scroll to top</a>
+    <a href="https://github.com/nickpascucci/S3P/tarball/master" class="tar">tar</a><a href="https://github.com/nickpascucci/S3P/zipball/master" class="zip">zip</a><a href="" class="code">source code</a>
+    <p class="name"></p>
+  </div>
+
+  
+</body>
+</html>
