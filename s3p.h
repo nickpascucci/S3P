@@ -32,6 +32,13 @@ typedef enum {
   S3P_PARSE_FAILURE = 4,
 } S3P_ERR;
 
+typedef enum  {
+  S3P_START = 0x56,  // Marks the start of a packet
+  S3P_TERM = 0x65,
+  S3P_ESCAPE = 0x25, // Marks escaped bytes
+  S3P_MASK = 0x20,   // Mask used for escaping chars. echar = char ^ S3P_MASK
+} S3P_CONTROL;
+
 /**
    Build a new packet from the bytes in "data" into "out".
 

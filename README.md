@@ -11,22 +11,22 @@ overhead making it suitable for embedded applications.
 
 ### Technical Details ###
 
-An S3P packet consists of a start marker, a length byte, a series of
-data bytes, and a checksum. In order to preserve the uniqueness of the
-start marker value, any conflicting values in the body of the packet
-are escaped.
+An S3P packet consists of a start marker, a series of data bytes, a
+checksum, and a termination marker. In order to preserve the
+uniqueness of the control values, any conflicting values in the body
+of the packet are escaped.
 
 An example:
 
-    [0x56][0x03][0x01][0x02][0x03][0x06]
+    [0x56][0x01][0x02][0x03][0x06][0x65]
     ^0    ^1    ^2    ^3    ^4    ^5
     
-    0: Start byte
-    1: Length byte
-    2: Data 1
-    3: Data 2
-    4: Data 3
-    5: Checksum
+    0: Start Byte
+    1: Data 1
+    2: Data 2
+    3: Data 3
+    4: Checksum
+    5: Termination Marker
 
 Escaping is performed by preceding the escaped value with 0x25, and
 XOR'ing it with 0x20. Only two values need to be escaped in this way:
@@ -35,27 +35,22 @@ value with 0x20 again.
 
 Another example:
 
-    [0x56][0x02][0x01][0x25][0x26]
+    [0x56][0x01][0x25][0x26][0x65]
 
 becomes
 
-    [0x56][0x02][0x01][0x25][0x05][0x26]
+    [0x56][0x01][0x25][0x05][0x26][0x65]
     ^0    ^1    ^2    ^3    ^4    ^5
 
-    0: Start byte
-    1: Length byte
-    2: Data 1
-    3: Escape Byte
-    4: Data 2
-    5: Checksum
-
-Because the length byte may take these values as well, it must be
-escaped. The length byte represents the number of data bytes in the
-packet *prior to escaping*. It does not take into account the start,
-length, or checksum bytes.
+    0: Start Byte
+    1: Data 1
+    2: Escape Byte
+    3: Data 2
+    4: Checksum
+    5: Termination Marker
 
 The checksum is calculated by summing the values of the data bytes,
-but not the start or length bytes, and taking the value MOD 256.
+but not the start or term bytes, and taking the value MOD 256.
 
 ### API ###
 
@@ -112,6 +107,12 @@ s3p\_read(). Their signatures are as follows:
 + S3P\_PAYLOAD\_TOO\_LARGE
 + S3P\_CHECKSUM\_ERR
 + S3P\_PARSE\_FAILURE
+
+## Improvements
+
++ Functions for reading packets from streams and passing them to
+user-provided callbacks would be nice. Portability (especially to
+embedded systems) might be an issue.
 
 All of the code in this library is provided free of charge and WITHOUT
 WARRANTY under the LGPL license.

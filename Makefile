@@ -8,7 +8,7 @@ lib: s3p.c s3p.h
 
 test: s3ptest.c lib
 	@echo "Building test program."
-	$(CC) -I. -o s3ptest s3ptest.c s3p.o
+	$(CC) -I. --std=c99 -o s3ptest s3ptest.c s3p.o
 	@echo "Executing tests."
 	./s3ptest
 

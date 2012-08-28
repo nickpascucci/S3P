@@ -41,6 +41,8 @@ void test_s3p_read_truncated_packet();
 void test_s3p_read_empty_packet();
 void test_s3p_build_with_small_buf();
 void test_s3p_build_with_large_payload();
+void test_s3p_read_oversize_packet();
+void test_s3p_build_read_integration();
 
 int main(int argc, char** argv){
   printf("Super Simple Streaming Protocol Test Program\n");
@@ -56,7 +58,9 @@ int main(int argc, char** argv){
   test_s3p_read_bad_checksum();
   test_s3p_read_truncated_packet();
   test_s3p_read_empty_packet();
-
+  test_s3p_read_oversize_packet();
+  test_s3p_build_read_integration();
+  
   COLOR("ALL PASS\n", GREEN);
   return 0;
 }
@@ -79,10 +83,9 @@ void test_s3p_build_no_escape(){
   err = s3p_build(data, sizeof data, out, 20, &psize);
   CHECK(S3P_SUCCESS == err);
   CHECK(7 == psize);
-  uint8_t template[] = { 0x56, 0x04, 0x00, 0x01, 0x02, 0x03, 0x06 };
+  uint8_t template[] = { 0x56, 0x00, 0x01, 0x02, 0x03, 0x06, 0x65 };
   int i;
   for(i=0; i<psize; i++){
-    //    printf("%02X ", out[i]);
     CHECK(out[i] == template[i]);
   }
   COLOR("Pass\n", GREEN);
@@ -98,10 +101,9 @@ void test_s3p_build_with_escape(){
   err = s3p_build(data, sizeof data, out, 20, &psize);
   CHECK(S3P_SUCCESS == err);
   CHECK(9 == psize);
-  uint8_t template[] = { 0x56, 0x04, 0x25, 0x05, 0x01, 0x25, 0x76, 0x03, 0x7F };
+  uint8_t template[] = { 0x56, 0x25, 0x05, 0x01, 0x25, 0x76, 0x03, 0x7F, 0x65 };
   int i;
   for(i=0; i<psize; i++){
-    //    printf("%02X ", out[i]);
     CHECK(out[i] == template[i]);
   }
   COLOR("Pass\n", GREEN);
@@ -133,13 +135,13 @@ void test_s3p_build_with_large_payload(){
 
 void test_s3p_read_no_escape(){
   printf("Testing s3p_read(), no escaping. ");
-  uint8_t in[] = { 0x56, 0x04, 0x00, 0x01, 0x02, 0x03, 0x06 };
+  uint8_t in[] = { 0x56, 0x00, 0x01, 0x02, 0x03, 0x06, 0x65 };
   uint8_t data[20] = { 0x00 };
 
   S3P_ERR err;
   size_t psize;
   err = s3p_read(in, sizeof in, data, 20, &psize);
-  
+
   CHECK(S3P_SUCCESS == err);
   CHECK(4 == psize);
   
@@ -152,7 +154,7 @@ void test_s3p_read_no_escape(){
 
 void test_s3p_read_with_escape(){
   printf("Testing s3p_read(), with escaping. ");
-  uint8_t in[] = { 0x56, 0x04, 0x25, 0x05, 0x01, 0x25, 0x76, 0x03, 0x7F };
+  uint8_t in[] = { 0x56, 0x25, 0x05, 0x01, 0x25, 0x76, 0x03, 0x7F, 0x65 };
   uint8_t data[20] = { 0x00 };
 
   S3P_ERR err;
@@ -172,7 +174,7 @@ void test_s3p_read_with_escape(){
 
 void test_s3p_read_with_mixed_packet(){
   printf("Testing s3p_read(), with mixed packet. ");
-  uint8_t in[] = { 0x56, 0x04, 0x25, 0x56, 0x01, 0x25, 0x76, 0x03, 0x7F };
+  uint8_t in[] = { 0x56, 0x25, 0x56, 0x01, 0x25, 0x76, 0x03, 0x7F, 0x65 };
   uint8_t data[20] = { 0x00 };
 
   S3P_ERR err;
@@ -184,7 +186,7 @@ void test_s3p_read_with_mixed_packet(){
 
 void test_s3p_read_without_start_byte(){
   printf("Testing s3p_read(), with no start byte. ");
-  uint8_t in[] = { 0x00, 0x04, 0x25, 0x56, 0x01, 0x25, 0x76, 0x03, 0x7F };
+  uint8_t in[] = { 0x00, 0x25, 0x56, 0x01, 0x25, 0x76, 0x03, 0x7F, 0x65 };
   uint8_t data[20] = { 0x00 };
 
   S3P_ERR err;
@@ -196,7 +198,7 @@ void test_s3p_read_without_start_byte(){
 
 void test_s3p_read_bad_checksum(){
   printf("Testing s3p_read(), with bad checksum. ");
-  uint8_t in[] = { 0x56, 0x03, 0x01, 0x76, 0x03, 0x70 };
+  uint8_t in[] = { 0x56, 0x01, 0x76, 0x03, 0x70, 0x65 };
   uint8_t data[20] = { 0x00 };
 
   S3P_ERR err;
@@ -208,7 +210,7 @@ void test_s3p_read_bad_checksum(){
 
 void test_s3p_read_truncated_packet(){
   printf("Testing s3p_read(), with truncated packet. ");
-  uint8_t in[] = { 0x56, 0x09, 0x01, 0x76, 0x03, 0x70 };
+  uint8_t in[] = { 0x56, 0x01, 0x76, 0x03, 0x70 };
   uint8_t data[20] = { 0x00 };
 
   S3P_ERR err;
@@ -227,5 +229,44 @@ void test_s3p_read_empty_packet(){
   size_t psize;
   err = s3p_read(in, 0, data, 20, &psize);
   CHECK(S3P_PARSE_FAILURE == err);
+  COLOR("Pass\n", GREEN);
+}
+
+void test_s3p_read_oversize_packet(){
+  printf("Testing s3p_read(), with oversized packet. ");
+  uint8_t in[] = { 0x56, 0x01, 0x76, 0x03, 0x70, 0x65 };
+  uint8_t data[20] = { 0x00 };
+
+  S3P_ERR err;
+  size_t psize;
+  err = s3p_read(in, sizeof in, data, 1, &psize);
+  CHECK(S3P_BUF_TOO_SMALL == err);
+  COLOR("Pass\n", GREEN);
+}
+
+void test_s3p_build_read_integration(){
+  printf("Testing s3p_build() and s3p_read() integration. ");
+  uint8_t in_data[] = { 0x25, 0x01, 0x56, 0x03, 0x65 };
+  uint8_t built_packet[20] = { 0x00 };
+  
+  S3P_ERR err;
+  size_t psize;
+  err = s3p_build(in_data, sizeof in_data, built_packet, sizeof built_packet, 
+                  &psize);
+  
+  CHECK(S3P_SUCCESS == err);
+  CHECK(11 == psize);
+  
+  size_t built_size = psize;
+  uint8_t out_data[20] = { 0x00 };
+  err = s3p_read(built_packet, built_size, out_data, sizeof out_data, &psize);
+
+  CHECK(S3P_SUCCESS == err);
+  CHECK(sizeof in_data == psize);
+  
+  for(int i=0; i<psize; i++){
+    CHECK(in_data[i] == out_data[i]);
+  }
+
   COLOR("Pass\n", GREEN);
 }
