@@ -16,7 +16,7 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <s3p.h>
+#include "s3p.h"
 
 enum S3P_CONTROL_CHARS {
   S3P_START = 0x56,  // Marks the start of a packet
@@ -24,8 +24,8 @@ enum S3P_CONTROL_CHARS {
   S3P_MASK = 0x20,   // Mask used for escaping chars. echar = char ^ S3P_MASK
 };
 
-S3P_ERR s3p_build(uint8_t const *data, int dsize, uint8_t *out, int osize, 
-                  int *psize){
+S3P_ERR s3p_build(uint8_t const *data, size_t dsize, uint8_t *out, size_t osize, 
+                  size_t *psize){
   if((dsize + S3P_OVERHEAD) > osize){
     return S3P_BUF_TOO_SMALL;
   }
@@ -40,51 +40,47 @@ S3P_ERR s3p_build(uint8_t const *data, int dsize, uint8_t *out, int osize,
 
   out[0] = S3P_START;
   
-  int dnext = 2; // Next data byte position in output buffer
+  int data_next = 2;
 
-  /*
-    If the length of the data (dsize, in this case) is S3P_START or S3P_ESCAPE
-    we need to escape it.
-   */
   if(S3P_START == dsize || S3P_ESCAPE == dsize){
     out[1] = S3P_ESCAPE;
     out[2] = ((uint8_t) dsize) ^ S3P_MASK;
-    dnext = 3;
+    data_next = 3;
   } else {
     out[1] = (uint8_t) dsize;
   }
 
-  uint8_t check = 0; // Checksum
+  uint8_t checksum = 0;
   int i;
   for(i=0; i<dsize; i++){
-    // Check the size restrictions: dnext should contain the number of bytes
-    // written so far less one (as the indices start at zero), and we need to
-    // add a checksum byte after all is said and done.
-    if(dnext + 2 > osize){
+    // Check the output buffer size restrictions: data_next should contain the
+    // number of bytes written so far less one (as the indices start at zero),
+    // and we need to add a checksum byte after all is said and done.
+    if(data_next + 2 > osize){
       return S3P_BUF_TOO_SMALL;
     }
 
     uint8_t dbyte = data[i];
-    check += dbyte;
+    checksum += dbyte;
 
     if(S3P_START == dbyte || S3P_ESCAPE == dbyte){
-      out[dnext] = S3P_ESCAPE;
-      dnext++;
-      out[dnext] = dbyte ^ S3P_MASK;
+      out[data_next] = S3P_ESCAPE;
+      data_next++;
+      out[data_next] = dbyte ^ S3P_MASK;
     } else {
-      out[dnext] = dbyte;
+      out[data_next] = dbyte;
     }
-    dnext++;
+    data_next++;
   }
 
-  out[dnext] = check;
-  dnext++;
-  *psize = dnext;
+  out[data_next] = checksum;
+  data_next++;
+  *psize = data_next;
   return S3P_SUCCESS;
 }
 
-S3P_ERR s3p_read(uint8_t const *in, int isize, uint8_t *data, int dsize, 
-                 int *psize){
+S3P_ERR s3p_read(uint8_t const *in, size_t isize, uint8_t *data, 
+                 size_t dsize, size_t *psize){
   if(dsize < 1){
     return S3P_BUF_TOO_SMALL;
   }
@@ -107,7 +103,7 @@ S3P_ERR s3p_read(uint8_t const *in, int isize, uint8_t *data, int dsize,
   }
 
   int dread = 0; // Number of data bytes read
-  uint8_t check = 0; // Checksum
+  uint8_t checksum = 0;
   while(dread < length){
     if(dread >= dsize){
       return S3P_BUF_TOO_SMALL;
@@ -130,21 +126,21 @@ S3P_ERR s3p_read(uint8_t const *in, int isize, uint8_t *data, int dsize,
     }
 
     data[dread] = dbyte;
-    check += dbyte;
+    checksum += dbyte;
     dnext++;
     dread++;
   }
   *psize = dread;
   
-  uint8_t pcheck;
+  uint8_t pchecksum;
   if(S3P_ESCAPE == in[dnext]){
     dnext++;
-    pcheck = in[dnext] ^ S3P_MASK;
+    pchecksum = in[dnext] ^ S3P_MASK;
   } else {
-    pcheck = in[dnext];
+    pchecksum = in[dnext];
   }
 
-  if(pcheck != check){
+  if(pchecksum != checksum){
     return S3P_CHECKSUM_ERR;
   }
 

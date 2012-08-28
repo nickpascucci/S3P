@@ -19,6 +19,7 @@
 #ifndef S3P_H
 #define S3P_H
 
+#include <stddef.h>
 #include <stdint.h>
 
 #define S3P_OVERHEAD 3
@@ -49,8 +50,8 @@ typedef enum {
    psize: a pointer to an int which will contain the length of the
    built packet.
 */
-S3P_ERR s3p_build(uint8_t const *data, int dsize, uint8_t *out, int osize, 
-                    int *psize);
+S3P_ERR s3p_build(uint8_t const *data, size_t dsize, uint8_t *out, size_t osize, 
+                    size_t *psize);
 
 /**
    Read a packet from "in", and place unescaped data into "data".
@@ -69,7 +70,7 @@ S3P_ERR s3p_build(uint8_t const *data, int dsize, uint8_t *out, int osize,
    psize: pointer to an int which will contain the length of the
    retrieved data.
 */
-S3P_ERR s3p_read(uint8_t const *in, int isize, uint8_t *data, int dsize, 
-                   int *psize);
+S3P_ERR s3p_read(uint8_t const *in, size_t isize, uint8_t *data, size_t dsize, 
+                   size_t *psize);
 
 #endif

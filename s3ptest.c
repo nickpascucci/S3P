@@ -75,7 +75,7 @@ void test_s3p_build_no_escape(){
   uint8_t out[20] = { 0x00 };
 
   S3P_ERR err;
-  int psize;
+  size_t psize;
   err = s3p_build(data, sizeof data, out, 20, &psize);
   CHECK(S3P_SUCCESS == err);
   CHECK(7 == psize);
@@ -94,7 +94,7 @@ void test_s3p_build_with_escape(){
   uint8_t out[20] = { 0x00 };
 
   S3P_ERR err;
-  int psize;
+  size_t psize;
   err = s3p_build(data, sizeof data, out, 20, &psize);
   CHECK(S3P_SUCCESS == err);
   CHECK(9 == psize);
@@ -113,7 +113,7 @@ void test_s3p_build_with_small_buf(){
   uint8_t out[20] = { 0x00 };
 
   S3P_ERR err;
-  int psize;
+  size_t psize;
   err = s3p_build(data, sizeof data, out, 1, &psize);
   CHECK(S3P_BUF_TOO_SMALL == err);
   COLOR("Pass\n", GREEN);
@@ -125,7 +125,7 @@ void test_s3p_build_with_large_payload(){
   uint8_t out[350] = { 0x00 };
 
   S3P_ERR err;
-  int psize;
+  size_t psize;
   err = s3p_build(data, sizeof data, out, 350, &psize);
   CHECK(S3P_PAYLOAD_TOO_LARGE == err);
   COLOR("Pass\n", GREEN);
@@ -137,7 +137,7 @@ void test_s3p_read_no_escape(){
   uint8_t data[20] = { 0x00 };
 
   S3P_ERR err;
-  int psize;
+  size_t psize;
   err = s3p_read(in, sizeof in, data, 20, &psize);
   
   CHECK(S3P_SUCCESS == err);
@@ -156,7 +156,7 @@ void test_s3p_read_with_escape(){
   uint8_t data[20] = { 0x00 };
 
   S3P_ERR err;
-  int psize;
+  size_t psize;
   err = s3p_read(in, sizeof in, data, 20, &psize);
 
   CHECK(S3P_SUCCESS == err);
@@ -176,7 +176,7 @@ void test_s3p_read_with_mixed_packet(){
   uint8_t data[20] = { 0x00 };
 
   S3P_ERR err;
-  int psize;
+  size_t psize;
   err = s3p_read(in, sizeof in, data, 20, &psize);
   CHECK(S3P_PARSE_FAILURE == err);
   COLOR("Pass\n", GREEN);  
@@ -188,7 +188,7 @@ void test_s3p_read_without_start_byte(){
   uint8_t data[20] = { 0x00 };
 
   S3P_ERR err;
-  int psize;
+  size_t psize;
   err = s3p_read(in, sizeof in, data, 20, &psize);
   CHECK(S3P_PARSE_FAILURE == err);
   COLOR("Pass\n", GREEN);
@@ -200,7 +200,7 @@ void test_s3p_read_bad_checksum(){
   uint8_t data[20] = { 0x00 };
 
   S3P_ERR err;
-  int psize;
+  size_t psize;
   err = s3p_read(in, sizeof in, data, 20, &psize);
   CHECK(S3P_CHECKSUM_ERR == err);
   COLOR("Pass\n", GREEN);
@@ -212,7 +212,7 @@ void test_s3p_read_truncated_packet(){
   uint8_t data[20] = { 0x00 };
 
   S3P_ERR err;
-  int psize;
+  size_t psize;
   err = s3p_read(in, sizeof in, data, 20, &psize);
   CHECK(S3P_PARSE_FAILURE == err);
   COLOR("Pass\n", GREEN);
@@ -224,7 +224,7 @@ void test_s3p_read_empty_packet(){
   uint8_t data[20] = { 0x00 };
 
   S3P_ERR err;
-  int psize;
+  size_t psize;
   err = s3p_read(in, 0, data, 20, &psize);
   CHECK(S3P_PARSE_FAILURE == err);
   COLOR("Pass\n", GREEN);
