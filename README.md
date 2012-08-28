@@ -1,3 +1,5 @@
+[![Build Status](https://secure.travis-ci.org/nickpascucci/S3P.png)](http://travis-ci.org/nickpascucci/S3P)
+
 ## libS3P and the Super Simple Streaming Protocol ##
 
 S3P is an extremely minimal protocol for doing basic communications
