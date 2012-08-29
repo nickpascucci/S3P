@@ -44,7 +44,7 @@ void test_s3p_build_with_large_payload();
 void test_s3p_read_oversize_packet();
 void test_s3p_build_read_integration();
 
-int main(int argc, char** argv){
+int main(void){
   printf("Super Simple Streaming Protocol Test Program\n");
 
   test_s3p_build_no_escape();
@@ -84,7 +84,7 @@ void test_s3p_build_no_escape(){
   CHECK(S3P_SUCCESS == err);
   CHECK(7 == psize);
   uint8_t template[] = { 0x56, 0x00, 0x01, 0x02, 0x03, 0x06, 0x65 };
-  for(int i=0; i<psize; i++){
+  for(size_t i=0; i<psize; i++){
     CHECK(out[i] == template[i]);
   }
   COLOR("Pass\n", GREEN);
@@ -101,7 +101,7 @@ void test_s3p_build_with_escape(){
   CHECK(S3P_SUCCESS == err);
   CHECK(9 == psize);
   uint8_t template[] = { 0x56, 0x25, 0x05, 0x01, 0x25, 0x76, 0x03, 0x7F, 0x65 };
-  for(int i=0; i<psize; i++){
+  for(size_t i=0; i<psize; i++){
     CHECK(out[i] == template[i]);
   }
   COLOR("Pass\n", GREEN);
@@ -143,7 +143,7 @@ void test_s3p_read_no_escape(){
   CHECK(S3P_SUCCESS == err);
   CHECK(4 == psize);
   
-  for(int i=0; i<psize; i++){
+  for(size_t i=0; i<psize; i++){
     CHECK(data[i] == i);
   }
   COLOR("Pass\n", GREEN);
@@ -162,7 +162,7 @@ void test_s3p_read_with_escape(){
   CHECK(4 == psize);
 
   uint8_t template[] = { 0x25, 0x01, 0x56, 0x03 };
-  for(int i=0; i<psize; i++){
+  for(size_t i=0; i<psize; i++){
     CHECK(data[i] == template[i]);
   }
   COLOR("Pass\n", GREEN);
@@ -260,7 +260,7 @@ void test_s3p_build_read_integration(){
   CHECK(S3P_SUCCESS == err);
   CHECK(sizeof in_data == psize);
   
-  for(int i=0; i<psize; i++){
+  for(size_t i=0; i<psize; i++){
     CHECK(in_data[i] == out_data[i]);
   }
 
