@@ -34,10 +34,10 @@ S3P_ERR s3p_build(uint8_t const *data, size_t dsize, uint8_t *out, size_t osize,
 
   out[0] = S3P_START;
   
-  int data_next = 1;
+  size_t data_next = 1;
 
   uint8_t checksum = 0;
-  for(int i=0; i<dsize; i++){
+  for(size_t i=0; i<dsize; i++){
     // Check the output buffer size restrictions: data_next should contain the
     // number of bytes written so far less one (as array indices start at zero),
     // and we need to add a checksum byte after all is said and done.
@@ -79,8 +79,8 @@ S3P_ERR s3p_read(uint8_t const *in, size_t isize, uint8_t *data,
     return S3P_PARSE_FAILURE;
   }
   
-  int dnext = 1;
-  int data_read = 0;
+  size_t dnext = 1;
+  size_t data_read = 0;
   uint8_t checksum = 0;
   for(;;){
     if(data_read >= dsize){
