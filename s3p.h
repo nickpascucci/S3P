@@ -25,11 +25,11 @@
 #define S3P_OVERHEAD 3
 
 typedef enum {
-  S3P_SUCCESS = 0,
-  S3P_BUF_TOO_SMALL = 1,
-  S3P_PAYLOAD_TOO_LARGE = 2,
-  S3P_CHECKSUM_ERR = 3,
-  S3P_PARSE_FAILURE = 4,
+  S3P_SUCCESS,
+  S3P_BUF_TOO_SMALL, // Output buffer too small
+  S3P_PAYLOAD_TOO_LARGE, // Payload exceeds protocol specification
+  S3P_CHECKSUM_ERR, // Received and calculated checksums don't match
+  S3P_PARSE_FAILURE, // The packet does not follow protocol specification
 } S3P_ERR;
 
 typedef enum  {
