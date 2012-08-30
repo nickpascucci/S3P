@@ -35,11 +35,6 @@ class TestS3PFunctions(unittest.TestCase):
         out = s3p.read(packet)
         self.assertEquals(data, out)
 
-    def test_build_oversize(self):
-        data = "a" * 300
-        self.assertRaisesRegexp(ValueError, "Payload too large.", 
-                                s3p.build, data)
-
 if __name__ == '__main__':
     print "Executing S3P Python Binding tests."
     unittest.main()

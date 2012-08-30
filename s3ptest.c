@@ -40,7 +40,6 @@ void test_s3p_read_bad_checksum();
 void test_s3p_read_truncated_packet();
 void test_s3p_read_empty_packet();
 void test_s3p_build_with_small_buf();
-void test_s3p_build_with_large_payload();
 void test_s3p_read_oversize_packet();
 void test_s3p_build_read_integration();
 
@@ -50,7 +49,6 @@ int main(void){
   test_s3p_build_no_escape();
   test_s3p_build_with_escape();
   test_s3p_build_with_small_buf();
-  test_s3p_build_with_large_payload();
   test_s3p_read_no_escape();
   test_s3p_read_with_escape();
   test_s3p_read_without_start_byte();
@@ -116,18 +114,6 @@ void test_s3p_build_with_small_buf(){
   size_t psize;
   err = s3p_build(data, sizeof data, out, 1, &psize);
   CHECK(S3P_BUF_TOO_SMALL == err);
-  COLOR("Pass\n", GREEN);
-}
-
-void test_s3p_build_with_large_payload(){
-  printf("Testing s3p_build(), with oversize payload. ");
-  uint8_t data[300] = { 0x00 };
-  uint8_t out[350] = { 0x00 };
-
-  S3P_ERR err;
-  size_t psize;
-  err = s3p_build(data, sizeof data, out, 350, &psize);
-  CHECK(S3P_PAYLOAD_TOO_LARGE == err);
   COLOR("Pass\n", GREEN);
 }
 

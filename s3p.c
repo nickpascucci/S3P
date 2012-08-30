@@ -23,9 +23,6 @@ S3P_ERR s3p_build(uint8_t const *data, size_t dsize, uint8_t *out, size_t osize,
   if((dsize + S3P_OVERHEAD) > osize){
     return S3P_BUF_TOO_SMALL;
   }
-  if(255 < dsize){
-    return S3P_PAYLOAD_TOO_LARGE;
-  }
 
   /*
     S3P packets follow this structure:

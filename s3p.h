@@ -27,7 +27,6 @@
 typedef enum {
   S3P_SUCCESS,
   S3P_BUF_TOO_SMALL, // Output buffer too small
-  S3P_PAYLOAD_TOO_LARGE, // Payload exceeds protocol specification
   S3P_CHECKSUM_ERR, // Received and calculated checksums don't match
   S3P_PARSE_FAILURE, // The packet does not follow protocol specification
 } S3P_ERR;
@@ -42,8 +41,7 @@ typedef enum  {
 /**
    Build a new packet from the bytes in "data" into "out".
 
-   S3P packets are limited to 256 bytes of data; attempting to packetize more
-   will result in a S3P_PAYLOAD_TOO_LARGE error. "out" must be at least
+   S3P packets can encapsulate arbitrary data, but "out" must be at least
    S3P_OVERHEAD bytes longer than the data that needs to be packetized; and this
    can increase to twofold depending on the number of bytes that need
    escaping. In general, unless memory usage is a concern, allocate twice as

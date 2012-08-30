@@ -31,8 +31,7 @@ static PyMethodDef S3PMethods[] = {
    "s3p.build(str): Build an S3P packet from a string.\n\n"
    "This function wraps the C function s3p_build, which constructs Super\n"
    "Simple Streaming Protocol packets. S3P packets can encapsulate any binary\n"
-   "data structured as a byte sequence, provided that it is less than 255\n"
-   "bytes long.\n\n"
+   "data structured as a byte sequence.\n\n"
    "Arguments:\n"
    "str -- a byte sequence to be encapsulated.\n\n"
    "Returns:\n"
@@ -94,19 +93,10 @@ static PyObject * py_s3p_build(PyObject *self, PyObject *args){
   } else {
     free(out);
     char err_message[100] = { 0x00 };
-
-    switch(err){
-    case S3P_PAYLOAD_TOO_LARGE:
-      PyErr_SetString(PyExc_ValueError, 
-                      "Payload too large.");
-      break;
-    default:
-      sprintf(err_message, 
-              "s3p_read returned an unexpected error: %d.\n"
-              "Please file a bug report so we can fix this!", err);
-      PyErr_SetString(PyExc_EnvironmentError, err_message);
-      break;
-    }
+    sprintf(err_message, 
+            "s3p_read returned an unexpected error: %d.\n"
+            "Please file a bug report so we can fix this!", err);
+    PyErr_SetString(PyExc_EnvironmentError, err_message);
   }
   return NULL;
 }
