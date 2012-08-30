@@ -12,7 +12,7 @@
   <script type="text/javascript" src="javascripts/script.js"></script>
 
   <title>S3p</title>
-  <meta name="description" content="A Super Simple Streaming Protocol for minimalistic communications.">
+  <meta name="description" content="A Super Simple Streaming Protocol for communicating simply.">
 
   <meta name="viewport" content="width=device-width,initial-scale=1">
 
@@ -25,7 +25,7 @@
       <h1 class="title">S3p</h1>
     </header>
     <div id="container">
-      <p class="tagline">A Super Simple Streaming Protocol for minimalistic communications.</p>
+      <p class="tagline">A Super Simple Streaming Protocol for communicating simply.</p>
       <div id="main" role="main">
         <div class="download-bar">
         <div class="inner">
@@ -95,51 +95,50 @@ but not the start or term bytes, and taking the value MOD 256.</p>
 
 <h3>API</h3>
 
-<p>libS3P provides a reference implementation, in C, of the S3P
-protocol. It provides two functions: s3p_build() and
-s3p_read(). Their signatures are as follows:</p>
+<p>libS3P provides a reference implementation of the S3P protocol in C,
+as well as Python bindings. The C interface provides two functions:
+s3p_build() and s3p_read(). Their signatures are as follows:</p>
 
-<div class="highlight"><pre>    <span class="cm">/**</span>
-<span class="cm">       Build a new packet from the bytes in "data" into "out".</span>
+<div class="highlight"><pre><span class="cm">/**</span>
+<span class="cm">   Build a new packet from the bytes in "data" into "out".</span>
 
-<span class="cm">       S3P packets are limited to 256 bytes of data; attempting to</span>
-<span class="cm">       packetize more will result in a S3P_PAYLOAD_TOO_LARGE</span>
-<span class="cm">       error. "out" must be at least S3P_OVERHEAD bytes longer than</span>
-<span class="cm">       the data that needs to be packetized; and this can increase to</span>
-<span class="cm">       twofold depending on the number of bytes that need escaping. In</span>
-<span class="cm">       general, unless memory usage is a concern, allocate twice as</span>
-<span class="cm">       much space as the data you wish to packetize.</span>
+<span class="cm">   S3P packets can encapsulate arbitrary data, but "out" must be at</span>
+<span class="cm">   least S3P_OVERHEAD bytes longer than the data that needs to be</span>
+<span class="cm">   packetized; and this can increase to twofold depending on the</span>
+<span class="cm">   number of bytes that need escaping. In general, unless memory usage</span>
+<span class="cm">   is a concern, allocate twice as much space as the data you wish to</span>
+<span class="cm">   packetize.</span>
 
-<span class="cm">       Params:</span>
-<span class="cm">       data: a byte array of data to be packetized.</span>
-<span class="cm">       dsize: the length of "data".</span>
-<span class="cm">       out: a byte array which will hold the built packet.</span>
-<span class="cm">       osize: the length of "out".</span>
-<span class="cm">       psize: a pointer to an int which will contain the length of the</span>
-<span class="cm">       built packet.</span>
-<span class="cm">    */</span>
-    <span class="n">S3P_ERR</span> <span class="n">s3p_build</span><span class="p">(</span><span class="kt">uint8_t</span> <span class="k">const</span> <span class="o">*</span><span class="n">data</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">dsize</span><span class="p">,</span> <span class="kt">uint8_t</span> <span class="o">*</span><span class="n">out</span><span class="p">,</span> 
-                      <span class="kt">size_t</span> <span class="n">osize</span><span class="p">,</span> <span class="kt">size_t</span> <span class="o">*</span><span class="n">psize</span><span class="p">);</span>
+<span class="cm">   Params:</span>
+<span class="cm">   data: a byte array of data to be packetized.</span>
+<span class="cm">   dsize: the length of "data".</span>
+<span class="cm">   out: a byte array which will hold the built packet.</span>
+<span class="cm">   osize: the length of "out".</span>
+<span class="cm">   psize: a pointer to an int which will contain the length of the</span>
+<span class="cm">   built packet.</span>
+<span class="cm">*/</span>
+<span class="n">S3P_ERR</span> <span class="n">s3p_build</span><span class="p">(</span><span class="kt">uint8_t</span> <span class="k">const</span> <span class="o">*</span><span class="n">data</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">dsize</span><span class="p">,</span> <span class="kt">uint8_t</span> <span class="o">*</span><span class="n">out</span><span class="p">,</span> 
+                  <span class="kt">size_t</span> <span class="n">osize</span><span class="p">,</span> <span class="kt">size_t</span> <span class="o">*</span><span class="n">psize</span><span class="p">);</span>
 
-    <span class="cm">/**</span>
-<span class="cm">       Read a packet from "in", and place unescaped data into "data".</span>
+<span class="cm">/**</span>
+<span class="cm">   Read a packet from "in", and place unescaped data into "data".</span>
 
-<span class="cm">       Breaking streams into packets is the responsibility of the</span>
-<span class="cm">       caller. This function will only read the first packet in the</span>
-<span class="cm">       "in" buffer; all other data will be ignored. This function</span>
-<span class="cm">       guarantees that the length of the data retrieved from the</span>
-<span class="cm">       packet will be strictly less than the size of the input packet.</span>
+<span class="cm">   Breaking streams into packets is the responsibility of the</span>
+<span class="cm">   caller. This function will only read the first packet in the</span>
+<span class="cm">   "in" buffer; all other data will be ignored. This function</span>
+<span class="cm">   guarantees that the length of the data retrieved from the</span>
+<span class="cm">   packet will be strictly less than the size of the input packet.</span>
 
-<span class="cm">       Params:</span>
-<span class="cm">       in: byte array of raw, packetized data.</span>
-<span class="cm">       isize: the length of "in".</span>
-<span class="cm">       data: byte array which will contain the retrieved data.</span>
-<span class="cm">       dsize: the length of "data".</span>
-<span class="cm">       psize: pointer to an int which will contain the length of the</span>
-<span class="cm">       retrieved data.</span>
-<span class="cm">    */</span>
-    <span class="n">S3P_ERR</span> <span class="n">s3p_read</span><span class="p">(</span><span class="kt">uint8_t</span> <span class="k">const</span> <span class="o">*</span><span class="n">in</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">isize</span><span class="p">,</span> <span class="kt">uint8_t</span> <span class="o">*</span><span class="n">data</span><span class="p">,</span> 
-                     <span class="kt">size_t</span> <span class="n">dsize</span><span class="p">,</span> <span class="kt">size_t</span> <span class="o">*</span><span class="n">psize</span><span class="p">);</span>
+<span class="cm">   Params:</span>
+<span class="cm">   in: byte array of raw, packetized data.</span>
+<span class="cm">   isize: the length of "in".</span>
+<span class="cm">   data: byte array which will contain the retrieved data.</span>
+<span class="cm">   dsize: the length of "data".</span>
+<span class="cm">   psize: pointer to an int which will contain the length of the</span>
+<span class="cm">   retrieved data.</span>
+<span class="cm">*/</span>
+<span class="n">S3P_ERR</span> <span class="n">s3p_read</span><span class="p">(</span><span class="kt">uint8_t</span> <span class="k">const</span> <span class="o">*</span><span class="n">in</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">isize</span><span class="p">,</span> <span class="kt">uint8_t</span> <span class="o">*</span><span class="n">data</span><span class="p">,</span> 
+                 <span class="kt">size_t</span> <span class="n">dsize</span><span class="p">,</span> <span class="kt">size_t</span> <span class="o">*</span><span class="n">psize</span><span class="p">);</span>
 </pre></div>
 
 <p><code>S3P_ERR</code> is an enum of error conditions, including:</p>
@@ -150,10 +149,50 @@ s3p_read(). Their signatures are as follows:</p>
 <li>S3P_PAYLOAD_TOO_LARGE</li>
 <li>S3P_CHECKSUM_ERR</li>
 <li>S3P_PARSE_FAILURE</li>
-</ul><h2>Improvements</h2>
+</ul><p>The Python bindings are provided in the <code>s3p</code> module, and have the
+following signatures:</p>
+
+<pre><code>build(...)
+    s3p.build(str): Build an S3P packet from a string.
+
+    This function wraps the C function s3p_build, which constructs
+    Super Simple Streaming Protocol packets. S3P packets can
+    encapsulate any binary data structured as a byte sequence.
+
+    Arguments:
+    str -- a byte sequence to be encapsulated.
+
+    Returns:
+    A new Python string containing the encapsulated data.
+
+read(...)
+    s3p.read(str): Read an S3P packet from a string.
+
+    This function wraps the C function s3p_read, which extracts data
+    from Super Simple Streaming Protocol Packets. S3P packets contain
+    a checksum which allows for extremely basic error detection (but
+    not correction).  s3p.read() will raise a ValueError if the
+    checksum does not match the data in the packet.
+
+    Arguments:
+    str -- an S3P packet to read.
+
+    Returns:
+    A new Python string containing the packet's data.
+
+    Raises:
+    ValueError if the packet's checksum doesn't match the data.
+    ValueError if the packet's formatting doesn't match the S3P 
+    protocol.
+</code></pre>
+
+<p>These bindings work with general-purpose Python strings and can be
+used to encapsulate arbitrary data.</p>
+
+<h2>Improvements</h2>
 
 <ul>
-<li>Functions for reading packets from streams and passing them to
+<li>C Functions for reading packets from streams and passing them to
 user-provided callbacks would be nice. Portability (especially to
 embedded systems) might be an issue.</li>
 </ul><p>All of the code in this library is provided free of charge and WITHOUT
