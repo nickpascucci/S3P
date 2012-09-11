@@ -32,9 +32,9 @@ typedef enum {
 } S3P_ERR;
 
 typedef enum  {
-  S3P_START = 0x56,  // Marks the start of a packet
-  S3P_TERM = 0x65,
-  S3P_ESCAPE = 0x25, // Marks escaped bytes
+  S3P_START = 0x5B,  // Marks the start of a packet. ASCII '['
+  S3P_TERM = 0x5D,   // Marks the end of a packet, ASCII ']'
+  S3P_ESCAPE = 0x5E, // Marks escaped bytes, ASCII '^'
   S3P_MASK = 0x20,   // Mask used for escaping chars. echar = char ^ S3P_MASK
 } S3P_CONTROL;
 
@@ -45,37 +45,40 @@ typedef enum  {
    S3P_OVERHEAD bytes longer than the data that needs to be packetized; and this
    can increase to twofold depending on the number of bytes that need
    escaping. In general, unless memory usage is a concern, allocate twice as
-   much space as the data you wish to packetize.
+   much space as the data you wish to packetize. Keep in mind that the output
+   buffer is used for intermediate steps, and may contain junk data if the
+   function exits with an error.
 
    Params:
-   data: a byte array of data to be packetized.
-   dsize: the length of "data".
+   in: a byte array of data to be packetized.
+   in_size: the length of "in".
    out: a byte array which will hold the built packet.
-   osize: the length of "out".
-   psize: a pointer to an int which will contain the length of the
+   out_size: the length of "out".
+   packet_size: a pointer to an int which will contain the length of the
    built packet.
 */
-S3P_ERR s3p_build(uint8_t const *data, size_t dsize, uint8_t *out, size_t osize, 
-                    size_t *psize);
+S3P_ERR s3p_build(uint8_t const *in, size_t in_size, uint8_t *out, size_t out_size, 
+                    size_t *packet_size);
 
 /**
    Read a packet from "in", and place unescaped data into "data".
     
-   Breaking streams into packets is the responsibility of the 
-   caller. This function will only read the first packet in the
-   "in" buffer; all other data will be ignored. This function guarantees that
-   the length of the data retrieved from the packet will be strictly less than
-   the size of the input packet.
-      
+   Breaking streams into packets is the responsibility of the caller. This
+   function will only read the first packet in the "in" buffer; all other data
+   will be ignored. This function guarantees that the length of the data
+   retrieved from the packet will be strictly less than the size of the input
+   packet. Keep in mind that the output buffer is used for intermediate decoding
+   steps and may contain junk data if the function exits unsuccessfully.
+
    Params:
    in: byte array of raw, packetized data.
-   isize: the length of "in".
-   data: byte array which will contain the retrieved data.
-   dsize: the length of "data".
-   psize: pointer to an int which will contain the length of the
+   in_size: the length of "in".
+   out: byte array which will contain the retrieved data.
+   out_size: the length of "out".
+   packet_size: pointer to an int which will contain the length of the
    retrieved data.
 */
-S3P_ERR s3p_read(uint8_t const *in, size_t isize, uint8_t *data, size_t dsize, 
-                   size_t *psize);
+S3P_ERR s3p_read(uint8_t const *in, size_t in_size, uint8_t *out, size_t out_size, 
+                   size_t *packet_size);
 
 #endif

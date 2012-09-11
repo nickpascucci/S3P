@@ -36,8 +36,6 @@ static PyMethodDef S3PMethods[] = {
    "str -- a byte sequence to be encapsulated.\n\n"
    "Returns:\n"
    "A new Python string containing the encapsulated data.\n\n"
-   "Raises:\n"
-   "ValueError if the payload is greater than 255 bytes long.\n\n"
 },
 
   {"read", py_s3p_read, METH_VARARGS, 

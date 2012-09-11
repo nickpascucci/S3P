@@ -18,9 +18,9 @@
 
 #include "s3p.h"
 
-S3P_ERR s3p_build(uint8_t const *data, size_t dsize, uint8_t *out, size_t osize, 
-                  size_t *psize){
-  if((dsize + S3P_OVERHEAD) > osize){
+S3P_ERR s3p_build(uint8_t const *in, size_t in_size, uint8_t *out, size_t out_size, 
+                  size_t *packet_size){
+  if(in_size > out_size || (in_size + S3P_OVERHEAD) > out_size){
     return S3P_BUF_TOO_SMALL;
   }
 
@@ -34,15 +34,15 @@ S3P_ERR s3p_build(uint8_t const *data, size_t dsize, uint8_t *out, size_t osize,
   size_t data_next = 1;
 
   uint8_t checksum = 0;
-  for(size_t i=0; i<dsize; i++){
+  for(size_t i=0; i<in_size; i++){
     // Check the output buffer size restrictions: data_next should contain the
     // number of bytes written so far less one (as array indices start at zero),
     // and we need to add a checksum byte after all is said and done.
-    if(data_next + 2 > osize){
+    if(data_next + 2 > out_size){
       return S3P_BUF_TOO_SMALL;
     }
 
-    uint8_t dbyte = data[i];
+    uint8_t dbyte = in[i];
     checksum += dbyte;
 
     if(S3P_START == dbyte || S3P_TERM == dbyte || S3P_ESCAPE == dbyte){
@@ -57,16 +57,16 @@ S3P_ERR s3p_build(uint8_t const *data, size_t dsize, uint8_t *out, size_t osize,
 
   out[data_next] = checksum;
   out[data_next + 1] = S3P_TERM;
-  *psize = data_next + 2;
+  *packet_size = data_next + 2;
   return S3P_SUCCESS;
 }
 
-S3P_ERR s3p_read(uint8_t const *in, size_t isize, uint8_t *data, 
-                 size_t dsize, size_t *psize){
-  if(dsize < 1){
+S3P_ERR s3p_read(uint8_t const *in, size_t in_size, uint8_t *out, 
+                 size_t out_size, size_t *psize){
+  if(out_size < 1){
     return S3P_BUF_TOO_SMALL;
   }
-  if(isize < S3P_OVERHEAD){
+  if(in_size < S3P_OVERHEAD){
     return S3P_PARSE_FAILURE;
   }
 
@@ -80,10 +80,10 @@ S3P_ERR s3p_read(uint8_t const *in, size_t isize, uint8_t *data,
   size_t data_read = 0;
   uint8_t checksum = 0;
   for(;;){
-    if(data_read >= dsize){
+    if(data_read >= out_size){
       return S3P_BUF_TOO_SMALL;
     }
-    if(dnext + 1 >= isize){
+    if(dnext + 1 >= in_size){
       return S3P_PARSE_FAILURE;
     }
 
@@ -109,7 +109,7 @@ S3P_ERR s3p_read(uint8_t const *in, size_t isize, uint8_t *data,
       dbyte = dbyte ^ S3P_MASK;
     }
 
-    data[data_read] = dbyte;
+    out[data_read] = dbyte;
     checksum += dbyte;
     data_read++;
     dnext++;
