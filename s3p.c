@@ -17,6 +17,7 @@
 */
 
 #include "s3p.h"
+#include <stddef.h>
 
 S3P_ERR s3p_build(uint8_t const *data, size_t dsize, uint8_t *out, size_t osize, 
                   size_t *psize){
