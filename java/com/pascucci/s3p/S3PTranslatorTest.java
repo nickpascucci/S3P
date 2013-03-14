@@ -18,6 +18,11 @@ import java.util.Arrays;
 public class S3PTranslatorTest {
   S3PTranslator translator;
 
+  private static final byte START = S3PTranslator.S3P_START;
+  private static final byte TERM = S3PTranslator.S3P_TERM;
+  private static final byte ESCAPE = S3PTranslator.S3P_ESCAPE;
+  private static final byte MASK = S3PTranslator.S3P_MASK;
+
   @Before
   public void setUp() {
     translator = new S3PTranslator();
@@ -26,15 +31,16 @@ public class S3PTranslatorTest {
   @Test
   public void testEncodeNoEscaping() throws S3PException {
     byte[] data = {0x00, 0x01, 0x02, 0x03};
-    byte[] expected = {0x56, 0x00, 0x01, 0x02, 0x03, 0x06, 0x65};
+    byte[] expected = {START, 0x00, 0x01, 0x02, 0x03, 0x06, TERM};
     translator.setRawBuffer(data);
     assertArrayEquals(expected, translator.getEncodedBuffer());
   }
 
   @Test
   public void testEncodeWithEscaping() throws S3PException {
-    byte[] data = {0x25, 0x01, 0x56, 0x03};
-    byte[] expected = {0x56, 0x25, 0x05, 0x01, 0x25, 0x76, 0x03, 0x7F, 0x65};
+    byte[] data = {ESCAPE, 0x01, START, 0x03};
+    byte[] expected = {START, ESCAPE, ESCAPE ^ MASK, 0x01, ESCAPE, START ^ MASK, 0x03, (byte) 0xBD,
+        TERM};
     translator.setRawBuffer(data);
     assertArrayEquals(expected, translator.getEncodedBuffer());
   }
@@ -47,7 +53,7 @@ public class S3PTranslatorTest {
 
   @Test
   public void testDecodeNoEscaping() throws S3PException {
-    byte[] data = {0x56, 0x00, 0x01, 0x02, 0x03, 0x06, 0x65};
+    byte[] data = {START, 0x00, 0x01, 0x02, 0x03, 0x06, TERM};
     byte[] expected = {0x00, 0x01, 0x02, 0x03};
     translator.setEncodedBuffer(data);
     assertArrayEquals(expected, translator.getRawBuffer());
@@ -55,33 +61,34 @@ public class S3PTranslatorTest {
 
   @Test
   public void testDecodeWithEscaping() throws S3PException {
-    byte[] data = {0x56, 0x25, 0x05, 0x01, 0x25, 0x76, 0x03, 0x7F, 0x65};
-    byte[] expected = {0x25, 0x01, 0x56, 0x03};
+    byte[] data = {START, ESCAPE, ESCAPE ^ MASK, 0x01, ESCAPE, START ^ MASK, 0x03, (byte) 0xBD,
+        TERM};
+    byte[] expected = {ESCAPE, 0x01, START, 0x03};
     translator.setEncodedBuffer(data);
     assertArrayEquals(expected, translator.getRawBuffer());
   }
 
   @Test(expected=S3PException.class)
   public void testDecodeMixedPacket() throws S3PException {
-    byte[] data = {0x56, 0x25, 0x56, 0x01, 0x25, 0x76, 0x03, 0x7F, 0x65};
+    byte[] data = {START, ESCAPE, START, 0x01, ESCAPE, 0x76, 0x03, 0x7F, TERM};
     translator.setEncodedBuffer(data);
   }
 
   @Test(expected=S3PException.class)
   public void testNoStartByte() throws S3PException {
-    byte[] data = {0x00, 0x25, 0x56, 0x01, 0x25, 0x76, 0x03, 0x7F, 0x65};
+    byte[] data = {0x00, ESCAPE, START, 0x01, ESCAPE, 0x76, 0x03, 0x7F, TERM};
     translator.setEncodedBuffer(data);
   }
 
   @Test(expected=S3PException.class)
   public void testBadChecksum() throws S3PException {
-    byte[] data = {0x56, 0x01, 0x76, 0x03, 0x70, 0x65};
+    byte[] data = {START, 0x01, 0x76, 0x03, 0x70, TERM};
     translator.setEncodedBuffer(data);
   }
 
   @Test(expected=S3PException.class)
   public void testTruncatedPacket() throws S3PException {
-    byte[] data = {0x56, 0x01, 0x76, 0x03, 0x70};
+    byte[] data = {START, 0x01, 0x76, 0x03, 0x70};
     translator.setEncodedBuffer(data);
   }
 
@@ -91,9 +98,9 @@ public class S3PTranslatorTest {
     translator.setEncodedBuffer(data);
   }
 
-  @Test(expected=S3PException.class)
+  @Test
   public void testIntegration() throws S3PException {
-    byte[] data = {0x25, 0x01, 0x56, 0x03, 0x65};
+    byte[] data = {ESCAPE, 0x01, START, 0x03, TERM};
     S3PTranslator translator1 = new S3PTranslator();
     S3PTranslator translator2 = new S3PTranslator();
 

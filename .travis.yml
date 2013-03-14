@@ -3,4 +3,4 @@ compiler:
   - gcc
   - clang
 # Change this to your needs
-script: make -k && sudo python setup.py install && make test && python s3ptest.py
+script: make -k && sudo python setup.py install && make test && python s3ptest.py && make javatests
