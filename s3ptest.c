@@ -99,7 +99,8 @@ void test_s3p_build_with_escape(){
   err = s3p_build(data, sizeof data, out, 20, &psize);
   CHECK(S3P_SUCCESS == err);
   CHECK(9 == psize);
-  uint8_t template[] = { S3P_START, S3P_ESCAPE, S3P_ESCAPE ^ S3P_MASK, 0x01, S3P_ESCAPE, S3P_START ^ S3P_MASK, 0x03, checksum, S3P_TERM };
+  uint8_t template[] = { S3P_START, S3P_ESCAPE, S3P_ESCAPE ^ S3P_MASK, 0x01, S3P_ESCAPE,
+                         S3P_START ^ S3P_MASK, 0x03, checksum, S3P_TERM };
   for(size_t i=0; i<psize; i++){
     CHECK(out[i] == template[i]);
   }
@@ -138,7 +139,8 @@ void test_s3p_read_no_escape(){
 
 void test_s3p_read_with_escape(){
   printf("Testing s3p_read(), with escaping. ");
-  uint8_t in[] = { S3P_START, S3P_ESCAPE, S3P_ESCAPE ^ S3P_MASK, 0x01, S3P_ESCAPE, S3P_START ^ S3P_MASK, 0x03, 0x00, S3P_TERM };
+  uint8_t in[] = { S3P_START, S3P_ESCAPE, S3P_ESCAPE ^ S3P_MASK, 0x01, S3P_ESCAPE, 
+S3P_START ^ S3P_MASK, 0x03, 0x00, S3P_TERM };
   uint8_t template[] = { S3P_ESCAPE, 0x01, S3P_START, 0x03 };
   in[7] = get_checksum(template, sizeof template);
   uint8_t data[20] = { 0x00 };
