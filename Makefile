@@ -42,7 +42,7 @@ javatests: java/com/pascucci/s3p/S3PTranslatorTest.class
 	java -cp $(CLASSPATH) org.junit.runner.JUnitCore com.pascucci.s3p.S3PTranslatorTest
 
 clean:
-	$(RM) *.o *.gcda *.gcno *.info s3ptest libS3P.a
+	$(RM) *.o *.gcda *.gcno *.info s3ptest libS3P.a java/com/pascucci/s3p/*.class
 
 coverage:
 	lcov --capture --directory ./ --output-file s3p.info

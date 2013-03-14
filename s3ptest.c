@@ -58,7 +58,7 @@ int main(void){  printf("Super Simple Streaming Protocol Test Program\n");
   test_s3p_read_empty_packet();
   test_s3p_read_oversize_packet();
   test_s3p_build_read_integration();
-  
+
   COLOR("ALL PASS\n", GREEN);
   return 0;
 }
@@ -130,7 +130,7 @@ void test_s3p_read_no_escape(){
 
   CHECK(S3P_SUCCESS == err);
   CHECK(4 == psize);
-  
+
   for(size_t i=0; i<psize; i++){
     CHECK(data[i] == i);
   }
@@ -139,9 +139,9 @@ void test_s3p_read_no_escape(){
 
 void test_s3p_read_with_escape(){
   printf("Testing s3p_read(), with escaping. ");
-  uint8_t in[] = { S3P_START, S3P_ESCAPE, S3P_ESCAPE ^ S3P_MASK, 0x01, S3P_ESCAPE, 
-S3P_START ^ S3P_MASK, 0x03, 0x00, S3P_TERM };
-  uint8_t template[] = { S3P_ESCAPE, 0x01, S3P_START, 0x03 };
+  uint8_t in[] = { S3P_START, S3P_ESCAPE, S3P_ESCAPE ^ S3P_MASK, 0x01, S3P_ESCAPE,
+                   S3P_START ^ S3P_MASK, 0x03, 0x00, S3P_TERM };
+  uint8_t template[] = { S3P_ESCAPE, 0x00, S3P_START, 0x03 };
   in[7] = get_checksum(template, sizeof template);
   uint8_t data[20] = { 0x00 };
 
@@ -167,7 +167,7 @@ void test_s3p_read_with_mixed_packet(){
   size_t psize;
   err = s3p_read(in, sizeof in, data, 20, &psize);
   CHECK(S3P_PARSE_FAILURE == err);
-  COLOR("Pass\n", GREEN);  
+  COLOR("Pass\n", GREEN);
 }
 
 void test_s3p_read_without_start_byte(){
@@ -234,22 +234,22 @@ void test_s3p_build_read_integration(){
   printf("Testing s3p_build() and s3p_read() integration. ");
   uint8_t in_data[] = { S3P_ESCAPE, 0x01, S3P_START, 0x03, S3P_TERM };
   uint8_t built_packet[20] = { 0x00 };
-  
+
   S3P_ERR err;
   size_t psize;
-  err = s3p_build(in_data, sizeof in_data, built_packet, sizeof built_packet, 
+  err = s3p_build(in_data, sizeof in_data, built_packet, sizeof built_packet,
                   &psize);
-  
+
   CHECK(S3P_SUCCESS == err);
   CHECK(11 == psize);
-  
+
   size_t built_size = psize;
   uint8_t out_data[20] = { 0x00 };
   err = s3p_read(built_packet, built_size, out_data, sizeof out_data, &psize);
 
   CHECK(S3P_SUCCESS == err);
   CHECK(sizeof in_data == psize);
-  
+
   for(size_t i=0; i<psize; i++){
     CHECK(in_data[i] == out_data[i]);
   }

@@ -2,11 +2,11 @@ package com.pascucci.s3p;
 
 public class S3PTranslator {
   public static final int MAX_PACKET_SIZE = 256;
-  public static final int S3P_START = 0x56;
-  public static final int S3P_TERM = 0x65;
-  public static final int S3P_ESCAPE = 0x25;
+  public static final int S3P_START = 0x5B;
+  public static final int S3P_TERM = 0x5D;
+  public static final int S3P_ESCAPE = 0x5E;
   public static final int S3P_MASK = 0x20;
-  
+
   byte[] raw = new byte[MAX_PACKET_SIZE];
   byte[] encoded = new byte[2*MAX_PACKET_SIZE];
   int rawSize = 0;
@@ -14,7 +14,7 @@ public class S3PTranslator {
 
   public S3PTranslator setRawBuffer(byte[] buffer) throws S3PException {
     if (buffer.length > MAX_PACKET_SIZE) {
-      throw new IllegalArgumentException("Buffer size must be less than " + MAX_PACKET_SIZE 
+      throw new IllegalArgumentException("Buffer size must be less than " + MAX_PACKET_SIZE
                                          + " bytes");
     }
 
@@ -33,7 +33,7 @@ public class S3PTranslator {
 
   public S3PTranslator setEncodedBuffer(byte[] buffer) throws S3PException {
     this.encoded = buffer;
-    decode(buffer);    
+    decode(buffer);
     return this;
   }
 
@@ -61,7 +61,7 @@ public class S3PTranslator {
     int checksum = 0;
     encoded[0] = intToByte(S3P_START);
     int nextEncodedSpot = 1;
-    
+
     for (int i = 0; i<buffer.length; i++) {
       int dataByte = byteToInt(buffer[i]);
       checksum += dataByte;
@@ -89,7 +89,7 @@ public class S3PTranslator {
       if (dataRead >= raw.length) {
         throw new S3PException("The packet is too large");
       }
-      
+
       if (dataNext + 1 >= buffer.length) {
         throw new S3PException("Reached end of packet before S3P_TERM byte");
       }
@@ -118,8 +118,9 @@ public class S3PTranslator {
       dataNext++;
     }
 
-    if ((checksum % 256) != buffer[dataNext]) {
-      throw new S3PException("Checksum mismatch");
+    if (intToByte(checksum) != buffer[dataNext]) {
+      throw new S3PException("Checksum mismatch: expected " + buffer[dataNext]
+                             + " but got " + checksum);
     }
     rawSize = dataRead;
   }
