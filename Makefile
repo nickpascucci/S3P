@@ -13,7 +13,7 @@ INCLUDES += \
 -I. \
 
 CLASSPATH += \
-.:/usr/share/java/junit.jar:/usr/share/java/hamcrest-core.jar
+.:/usr/share/java/junit.jar:/usr/share/java/junit4.jar:/usr/share/java/hamcrest-core.jar
 
 all: lib bindings
 
