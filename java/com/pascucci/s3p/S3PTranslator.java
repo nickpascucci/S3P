@@ -9,10 +9,8 @@ public class S3PTranslator {
   
   byte[] raw = new byte[MAX_PACKET_SIZE];
   byte[] encoded = new byte[2*MAX_PACKET_SIZE];
-
-  public S3PTranslator() {
-    
-  }
+  int rawSize = 0;
+  int encodedSize = 0;
 
   public S3PTranslator setRawBuffer(byte[] buffer) throws S3PException {
     if (buffer.length > MAX_PACKET_SIZE) {
@@ -25,31 +23,51 @@ public class S3PTranslator {
     return this;
   }
 
+  public S3PTranslator setRawBuffer(int[] buffer) throws S3PException {
+    byte[] convertedCopy = new byte[buffer.length];
+    for (int i=0; i<buffer.length; i++) {
+      convertedCopy[i] = intToByte(buffer[i]);
+    }
+    return setRawBuffer(convertedCopy);
+  }
+
   public S3PTranslator setEncodedBuffer(byte[] buffer) throws S3PException {
     this.encoded = buffer;
     decode(buffer);    
     return this;
   }
 
+  public S3PTranslator setEncodedBuffer(int[] buffer) throws S3PException {
+    byte[] convertedCopy = new byte[buffer.length];
+    for (int i=0; i<buffer.length; i++) {
+      convertedCopy[i] = intToByte(buffer[i]);
+    }
+    return setEncodedBuffer(convertedCopy);
+  }
+
   public byte[] getRawBuffer() {
-    return raw;
+    byte[] copy = new byte[rawSize];
+    System.arraycopy(raw, 0, copy, 0, rawSize);
+    return copy;
   }
 
   public byte[] getEncodedBuffer() {
-    return encoded;
+    byte[] copy = new byte[encodedSize];
+    System.arraycopy(encoded, 0, copy, 0, encodedSize);
+    return copy;
   }
 
   private void encode(byte[] buffer) {
     int checksum = 0;
-    int nextEncodedSpot = 0;
     encoded[0] = intToByte(S3P_START);
+    int nextEncodedSpot = 1;
     
-    for (int i = 0; i<encoded.length; i++) {
+    for (int i = 0; i<buffer.length; i++) {
       int dataByte = byteToInt(buffer[i]);
       checksum += dataByte;
       if (dataByte == S3P_START || dataByte == S3P_TERM || dataByte == S3P_ESCAPE) {
         dataByte = escape(dataByte);
-        encoded[nextEncodedSpot] = intToByte(S3P_MASK);
+        encoded[nextEncodedSpot] = intToByte(S3P_ESCAPE);
         nextEncodedSpot++;
       }
       encoded[nextEncodedSpot] = intToByte(dataByte);
@@ -57,6 +75,7 @@ public class S3PTranslator {
     }
     encoded[nextEncodedSpot] = intToByte(checksum % 256);
     encoded[nextEncodedSpot + 1] = intToByte(S3P_TERM);
+    encodedSize = nextEncodedSpot + 2;
   }
 
   private void decode(byte[] buffer) throws S3PException {
@@ -71,11 +90,11 @@ public class S3PTranslator {
         throw new S3PException("The packet is too large");
       }
       
-      if (dataNext+1 >= buffer.length) {
+      if (dataNext + 1 >= buffer.length) {
         throw new S3PException("Reached end of packet before S3P_TERM byte");
       }
 
-      if (buffer[dataNext] == intToByte(S3P_TERM)) {
+      if (buffer[dataNext + 1] == intToByte(S3P_TERM)) {
         break;
       }
 
@@ -90,7 +109,6 @@ public class S3PTranslator {
         if (dataByte == S3P_START || dataByte == S3P_ESCAPE) {
            throw new S3PException("Illegal byte '" + dataByte + "' after ESCAPE byte");
         }
-        
         dataByte = escape(dataByte);
       }
 
@@ -103,6 +121,7 @@ public class S3PTranslator {
     if ((checksum % 256) != buffer[dataNext]) {
       throw new S3PException("Checksum mismatch");
     }
+    rawSize = dataRead;
   }
 
   // Escape and unescape are mirrors of each other

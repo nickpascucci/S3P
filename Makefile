@@ -12,6 +12,9 @@ CC_FLAGS += \
 INCLUDES += \
 -I. \
 
+CLASSPATH += \
+.:/usr/share/java/junit.jar:/usr/share/java/hamcrest-core.jar
+
 all: lib bindings
 
 lib: s3p.c s3p.h
@@ -28,6 +31,15 @@ test: s3ptest.c lib
 bindings: s3pmodule.c lib
 	@echo "Building Python bindings."
 	python setup.py build
+
+java/com/pascucci/s3p/%.class: java/com/pascucci/s3p/%.java
+	@echo "Compiling file: $*"
+	cd java; \
+	javac -cp $(CLASSPATH) "com/pascucci/s3p/$*.java"
+
+javatests: java/com/pascucci/s3p/S3PTranslatorTest.class
+	cd java; \
+	java -cp $(CLASSPATH) org.junit.runner.JUnitCore com.pascucci.s3p.S3PTranslatorTest
 
 clean:
 	$(RM) *.o *.gcda *.gcno *.info s3ptest libS3P.a
