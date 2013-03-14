@@ -14,14 +14,14 @@ class TestS3PFunctions(unittest.TestCase):
     
     def test_read_good_packet(self):
         packet = struct.pack("BBBBBBB", 
-                             0x56, 0x25, 0x05, 0x02, 0x03, 0x2A, 0x65)
+                             0x5B, 0x5E, 0x05, 0x02, 0x03, 0x2A, 0x5D)
         data = s3p.read(packet)
         template = struct.pack("BBB", 0x25, 0x02, 0x03)
         self.assertEquals(data, template)
 
     def test_read_bad_checksum(self):
         packet = struct.pack("BBBBBBB", 
-                             0x56, 0x25, 0x05, 0x02, 0x03, 0x05, 0x65)
+                             0x5B, 0x25, 0x05, 0x02, 0x03, 0x05, 0x5D)
         self.assertRaisesRegexp(ValueError, ".*checksum.*", s3p.read, packet)
 
     def test_read_bad_format(self):
