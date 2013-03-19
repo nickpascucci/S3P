@@ -12,7 +12,7 @@ CC_FLAGS += \
 INCLUDES += \
 -I. \
 
-CLASSPATH += \
+CLASS_PATH += \
 .:/usr/share/java/junit.jar:/usr/share/java/junit4.jar:/usr/share/java/hamcrest-core.jar
 
 all: lib bindings
@@ -35,11 +35,11 @@ bindings: s3pmodule.c lib
 java/com/pascucci/s3p/%.class: java/com/pascucci/s3p/%.java
 	@echo "Compiling file: $*"
 	cd java; \
-	javac -cp $(CLASSPATH) "com/pascucci/s3p/$*.java"
+	javac -cp $(CLASS_PATH) "com/pascucci/s3p/$*.java"
 
 javatests: java/com/pascucci/s3p/S3PTranslatorTest.class
 	cd java; \
-	java -cp $(CLASSPATH) org.junit.runner.JUnitCore com.pascucci.s3p.S3PTranslatorTest
+	java -cp $(CLASS_PATH) org.junit.runner.JUnitCore com.pascucci.s3p.S3PTranslatorTest
 
 clean:
 	$(RM) *.o *.gcda *.gcno *.info s3ptest libS3P.a java/com/pascucci/s3p/*.class
