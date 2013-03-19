@@ -22,6 +22,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#define S3P_MAX_SIZE 256
 #define S3P_OVERHEAD 3
 
 typedef enum {

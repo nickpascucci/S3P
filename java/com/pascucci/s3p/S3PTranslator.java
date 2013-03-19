@@ -138,10 +138,6 @@ public class S3PTranslator {
     // Due to sign extension we must mask the 3 most significant bytes.
     return (int) a & 0x000000FF;
   }
+
 }
 
-class S3PException extends Exception {
-  public S3PException(String message) {
-    super(message);
-  }
-}
